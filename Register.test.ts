@@ -1,94 +1,84 @@
 import { test, expect } from '@playwright/test';
 import RegisterPage from '../pages/Register';
-import testData from '../test-data/register-form.json' assert { type: "json"};  
+import dataTest from '../fixtures/register-form-data';
+import { registerHooks } from 'module';
+import { execArgv } from 'process';
+
+// import testData from '../test-data/register-form.json' assert { type: "json"};
+let registerPage: RegisterPage;
 
 test.beforeEach(async ({ page }) => {
-    const registerPage = new RegisterPage(page)
+    registerPage = new RegisterPage(page);
     await registerPage.navigate();
 });
 
-testData.forEach(({ username, email, password, confirmPassword, agreeToTerm }) => {
-    test(`testing with ${username}`, async ({ page }) => {
-        const registerPage = new RegisterPage(page)
-        await registerPage.fillRegisterForm({ username, email, password, confirmPassword, agreeToTerm })
-        await registerPage.submitForm();
+test.describe('Happy cases', () => {
+    dataTest.forEach(({ name, username, email, password, confirmPassword, agreeToTerm }) => {
+        test((`${name}`), async () => {
+            await registerPage.fillRegisterForm({ username, email, password, confirmPassword, agreeToTerm });
+            await registerPage.submitForm();
+        })
     })
-})
-
-test('All title fields are present', async ({ page }) => {
-    const registerPage = new RegisterPage(page);
-    expect(await registerPage.getTitleText(registerPage.accountTitle)).toBe('ACCOUNT DETAILS');
-    expect(await registerPage.getTitleText(registerPage.personalTitle)).toBe('PERSONAL DETAILS');
-    expect(await registerPage.getTitleText(registerPage.addressTitle)).toBe('ADDRESS');
 });
 
-test.describe('Field Validation', () => {
-    const testcases = [
-        { fieldSelector: '[name="usernameRegisterPage"]', expectedError: 'Username field is required' },
-        { fieldSelector: '[name="emailRegisterPage"]', expectedError: 'Email field is required' },
-        { fieldSelector: '[name="passwordRegisterPage"]', expectedError: 'Password field is required' },
-        { fieldSelector: '[name="confirm_passwordRegisterPage"]', expectedError: 'Confirm password field is required' },
+test.describe('Check Validation Field', () => {
+    const testcases1 = [
+        { field: 'username', fieldSelector: '[name="usernameRegisterPage"]', expectedError: 'Username field is required', placeHolder: 'Username' },
+        { field: 'Email', fieldSelector: '[name="emailRegisterPage"]', expectedError: 'Email field is required', placeHolder: 'Email' },
+        { field: 'Password', fieldSelector: '[name="passwordRegisterPage"]', expectedError: 'Password field is required', placeHolder: 'Password' },
+        { field: 'Confirm password', fieldSelector: '[name="confirm_passwordRegisterPage"]', expectedError: 'Confirm password field is required', placeHolder: 'Confirm password' },
     ];
 
-    testcases.forEach(({ fieldSelector, expectedError }) => {
-        test(`Leave ${fieldSelector} blank`, async ({ page }) => {
-            const registerPage = new RegisterPage(page);
-            const fieldLocator = page.locator(fieldSelector);
-            await registerPage.validateFieldError(fieldLocator, expectedError);
+    testcases1.forEach(({ field, fieldSelector, expectedError }) => {
+        test(`Leave ${field} blank`, async () => {
+            const actual = await registerPage.getBlankError(fieldSelector);
+            expect(actual).toBe(expectedError);
+
         });
     });
+
+    testcases1.forEach(({ field, fieldSelector, placeHolder }) => {
+        test(`Check ${field}'s placeholder`, async () => {
+            const actualPlaceHolder = await registerPage.getPlaceHolder(fieldSelector)
+            expect(actualPlaceHolder).toBe(placeHolder);
+        })
+    })
+    const testcases2 = [
+        { field: 'firstname', fieldSelector: '[name="first_nameRegisterPage"]', placeHolder: 'First Name' },
+        { field: 'lastname', fieldSelector: '[name="last_nameRegisterPage"]', placeHolder: 'Last Name' },
+        { field: 'phonenumber', fieldSelector: '[name="phone_numberRegisterPage"]', placeHolder: 'Phone Number' },
+        { field: 'city', fieldSelector: '[name="cityRegisterPage"]', placeHolder: 'City' },
+        { field: 'address', fieldSelector: '[name="addressRegisterPage"]', placeHolder: 'Address' },
+        { field: 'state/province/region', fieldSelector: '[name="state_/_province_/_regionRegisterPage"]', placeHolder: 'State / Province / Region' },
+        { field: 'postalcode', fieldSelector: '[name="postal_codeRegisterPage"]', placeHolder: 'Postal Code' },
+    ]
+    testcases2.forEach(({ field, fieldSelector, placeHolder }) => {
+        test(`Check ${field}'s placeholder`, async () => {
+            const actual = await registerPage.getPlaceHolder(fieldSelector);
+            await expect(actual).toBe(placeHolder);
+        })
+    })
+    test('input wrong email address format', async () => {
+        const actualError = await registerPage.getWrongEmailError('annen');
+        await expect(actualError).toBe("Your email address isn't formatted correctly")
+    })
+
 });
 
-test('Password displaying as dots', async ({ page }) => {
-    const registerPage = new RegisterPage(page);
-    await expect(registerPage.passwordField).toHaveAttribute('type', 'password');
-});
+test.describe('Check UI', () => {
+    test('All title fields are present', async () => {
+        expect(await registerPage.getTitleText(registerPage.accountTitle)).toBe('ACCOUNT DETAILS');
+        expect(await registerPage.getTitleText(registerPage.personalTitle)).toBe('PERSONAL DETAILS');
+        expect(await registerPage.getTitleText(registerPage.addressTitle)).toBe('ADDRESS');
+    });
 
-test('Check country value selected', async ({ page }) => {
-    const registerPage = new RegisterPage(page);
-    const selectedValue = await registerPage.selectCountry('Afghanistan');
-    expect(selectedValue).toBe('Afghanistan');
-});
+    test('Password displaying as dots', async () => {
+        await expect(registerPage.passwordField).toHaveAttribute('type', 'password');
+    });
 
-
-
-
-// test.beforeEach(async ({ page }) => {
-//     await page.goto('https://advantageonlineshopping.com/#/register');
-// })
-
-// test('All title fields are present', async ({ page }) => {
-//     const accountTitle = await page.locator('[translate="ACCOUNT_DETAILS"]').textContent();
-//     await expect(accountTitle).toBe('ACCOUNT DETAILS')
-//     const personalTitle = await page.locator('[translate="PERSONAL_DETAILS"]').textContent();
-//     await expect(personalTitle).toBe('PERSONAL DETAILS')
-//     const addressTitle = await page.locator('[translate="ADDRESS"]').textContent();
-//     await expect(addressTitle).toBe('ADDRESS')
-// });
-
-// test.describe('Field Validation', () => {
-//     const testcases = [
-//         { field: 'usernameRegisterPage', expectedError: 'Username field is required' },
-//         { field: 'emailRegisterPage', expectedError: 'Email field is required' },
-//         { field: 'passwordRegisterPage', expectedError: 'Password field is required' },
-//         { field: 'confirm_passwordRegisterPage', expectedError: 'Confirm password field is required' },
-
-//     ];
-//     testcases.forEach(({ field, expectedError }) => {
-//         test(`Leave ${field} blank`, async ({ page }) => {
-//             await page.locator(`[name="${field}"]`).click()
-//             await page.locator('body').click()
-//             await expect(page.locator(`[name='${field}'] + label`)).toContainText(expectedError)
-//         })
-//     })
-// });
-
-// test('Password displaying as dots', async ({ page }) => {
-//     await expect(page.locator('[name="passwordRegisterPage"]')).toHaveAttribute('type', 'password')
-// })
-
-// test('Check country value selected', async ({ page }) => {
-//     await page.locator('[name="countryListboxRegisterPage"]').selectOption({ label: 'Afganistan' })
-//     const selectedValue = await page.locator('[name="countryListboxRegisterPage"] option:checked').textContent()
-//     expect(selectedValue).toBe('Afganistan')
-// })
+    test('Check country value selected', async () => {
+        await registerPage.selectCountry('Afganistan');
+        const countrySelected = await registerPage.getCountrySelected();
+        await expect(countrySelected).toBe('Afganistan');
+    });
+})
