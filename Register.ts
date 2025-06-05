@@ -12,6 +12,8 @@ class RegisterPage {
     readonly countryDropdown: Locator;
     readonly agreeCheckbox: Locator;
     readonly registerButton: Locator;
+    readonly selectedCountry: Locator;
+    readonly wrongEmailError: Locator;
 
 
     constructor(page: Page) {
@@ -23,26 +25,28 @@ class RegisterPage {
         // Form Fields
         this.usernameField = page.locator('[name="usernameRegisterPage"]');
         this.emailField = page.locator('[name="emailRegisterPage"]');
+        this.wrongEmailError = page.locator('[name="emailRegisterPage"] + label')
         this.passwordField = page.locator('[name="passwordRegisterPage"]');
         this.confirmPasswordField = page.locator('[name="confirm_passwordRegisterPage"]');
 
         // Country Dropdown
         this.countryDropdown = page.locator('[name="countryListboxRegisterPage"]');
+        this.selectedCountry = page.locator('[name="countryListboxRegisterPage"] option:checked');
         this.agreeCheckbox = page.locator('[name="i_agree"]');
         this.registerButton = page.locator('#register_btn');
     }
     async navigate() {
-        this.page.goto('https://advantageonlineshopping.com/#/register');
+        await this.page.goto('https://advantageonlineshopping.com/#/register');
     }
 
     async getTitleText(element) {
         return await element.textContent();
     }
 
-    async validateFieldError(fieldLocator, expectedError) {
-        await fieldLocator.click();
+    async getBlankError(fieldSelector) {
+        await this.page.locator(fieldSelector).click();
         await this.page.locator('body').click();
-        await expect(fieldLocator.locator('+ label')).toContainText(expectedError);
+        return this.page.locator(`${fieldSelector} + label`).textContent()
     }
     async submitForm() {
         await this.registerButton.click();
@@ -50,8 +54,20 @@ class RegisterPage {
 
     async selectCountry(countryLabel) {
         await this.countryDropdown.selectOption({ label: countryLabel });
-        return await this.page.locator('[name="countryListboxRegisterPage"] option:checked').textContent();
     }
+    async getCountrySelected() {
+        return await this.selectedCountry.textContent();
+    }
+    async getWrongEmailError(wrongemail) {
+        await this.emailField.fill(wrongemail);
+        await this.page.locator('body').click();
+        return await this.wrongEmailError.textContent();
+    }
+
+    async getPlaceHolder(fieldSelector) {
+        return await this.page.locator(`${fieldSelector} + label`).textContent();
+    }
+
     async fillRegisterForm({ username, email, password, confirmPassword, agreeToTerm }) {
         await this.usernameField.fill(username);
         await this.emailField.fill(email);
