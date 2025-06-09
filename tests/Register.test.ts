@@ -1,10 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import RegisterPage from "../pages/Register";
 import dataTest from "../test-data/register-form-data";
-import { registerHooks } from "module";
-import { execArgv } from "process";
+import { randomString } from "../utils/random-char";
 
-// import testData from '../test-data/register-form.json' assert { type: "json"};
 let registerPage: RegisterPage;
 
 test.beforeEach(async ({ page }) => {
@@ -146,7 +144,30 @@ test.describe("Check UI", () => {
   test("Check country value selected", async () => {
     await registerPage.selectCountry("Afganistan");
     const countrySelected = await registerPage.getCountrySelected();
-    await expect(countrySelected).toBe("Afganistan");
+    expect(countrySelected).toBe("Afganistan");
+  });
+});
+
+test.describe("Field limit", () => {
+  test("fill username > 15 chars", async ({ page }) => {
+    const randombb = randomString(16);
+    await registerPage.usernameField.fill(randombb);
+    await page.locator("body").click();
+    await expect(
+      page.locator('[name="usernameRegisterPage"] + label')
+    ).toContainText("Use maximum 15 character");
+  });
+
+  test("fill password > 12 chars", async ({ page }) => {
+    const randomPassword = Math.random()
+      .toString(36)
+      .padEnd(20, "x")
+      .substring(2, 15);
+    await registerPage.passwordField.fill(randomPassword);
+    await page.locator("body").click();
+    await expect(
+      page.locator('[name="passwordRegisterPage"]+ label')
+    ).toContainText("Use maximum 12 character");
   });
 });
 
@@ -160,5 +181,34 @@ test.describe("Handle account popup", () => {
     await registerPage.accountquestion.click();
     await registerPage.closepopupbutton.click();
     await expect(registerPage.signinpopup).toBeHidden();
+  });
+  test("click Create new account on signin popup ", async ({ page }) => {
+    await registerPage.accountquestion.click();
+    await registerPage.createnewaccount.click();
+    await expect(registerPage.accountTitle).toBeVisible();
+  });
+});
+
+test.describe("footer social media icons", () => {
+  test("click f icon", async ({ page, context }) => {
+    const pagePromise = context.waitForEvent("page");
+    await registerPage.facebookicon.click();
+    const newPage = await pagePromise;
+    await expect(newPage).toHaveURL("https://www.facebook.com/MicroFocus/");
+  });
+
+  test("click twitter icon", async ({ page, context }) => {
+    const [newPage] = await Promise.all([
+      context.waitForEvent("page"),
+      registerPage.twittericon.click(),
+    ]);
+    await expect(newPage).toHaveURL("https://x.com/MicroFocus");
+  });
+  test("click linkedin icon", async ({ page, context }) => {
+    const [newPage] = await Promise.all([
+      context.waitForEvent("page"),
+      registerPage.linkedinicon.click(),
+    ]);
+    await expect(newPage).toHaveTitle(" LinkedIn Login, Sign in | LinkedIn ");
   });
 });

@@ -17,14 +17,16 @@ class RegisterPage {
   readonly accountquestion: Locator;
   readonly signinpopup: Locator;
   readonly closepopupbutton: Locator;
+  readonly createnewaccount: Locator;
+  readonly facebookicon: Locator;
+  readonly twittericon: Locator;
+  readonly linkedinicon: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.accountTitle = page.locator('[translate ="ACCOUNT_DETAILS"]');
     this.personalTitle = page.locator('[translate="PERSONAL_DETAILS"]');
     this.addressTitle = page.locator('[translate="ADDRESS"]');
-
-    // Form Fields
     this.usernameField = page.locator('[name="usernameRegisterPage"]');
     this.emailField = page.locator('[name="emailRegisterPage"]');
     this.wrongEmailError = page.locator('[name="emailRegisterPage"] + label');
@@ -32,8 +34,6 @@ class RegisterPage {
     this.confirmPasswordField = page.locator(
       '[name="confirm_passwordRegisterPage"]'
     );
-
-    // Country Dropdown
     this.countryDropdown = page.locator('[name="countryListboxRegisterPage"]');
     this.selectedCountry = page.locator(
       '[name="countryListboxRegisterPage"] option:checked'
@@ -43,6 +43,10 @@ class RegisterPage {
     this.accountquestion = page.getByText("ALREADY HAVE AN ACCOUNT?");
     this.signinpopup = page.getByText("SIGN IN WITH FACEBOOK OR");
     this.closepopupbutton = page.locator(".closeBtn");
+    this.createnewaccount = page.getByText("CREATE NEW ACCOUNT");
+    this.facebookicon = page.locator('[name="follow_facebook"]');
+    this.twittericon = page.locator('img[name="follow_twitter"]');
+    this.linkedinicon = page.locator('img[name="follow_linkedin"]');
   }
   async navigate() {
     await this.page.goto("https://advantageonlineshopping.com/#/register");
