@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { faker } from '@faker-js/faker';
 
 class RegisterPage {
     readonly page: Page;
@@ -143,6 +144,23 @@ class RegisterPage {
     }
     async setViewportSize(width, height) {
         await this.page.setViewportSize({ width, height });
+    }
+    async generateRandomUser() {
+        const password = faker.internet.password({ length: 12, pattern: /[A-Za-z0-9!@#$%^&*()?-]/ });
+        return {
+            username: faker.internet.username().slice(0, 15),
+            email: faker.internet.email(),
+            password: password,
+            confirmPassword: password,
+            // firstName: faker.person.firstName().slice(0, 30),
+            // lastName: faker.person.lastName().slice(0, 30),
+            // phoneNumber: faker.phone.number().slice(0, 20),
+            // city: faker.location.city().slice(0, 25),
+            // address: faker.location.streetAddress().slice(0, 25),
+            // state: faker.location.state().slice(0, 10),
+            // postalCode: faker.location.zipCode().slice(0, 10)
+            agreeToTerm: true
+        }
     }
 }
 export default RegisterPage;
