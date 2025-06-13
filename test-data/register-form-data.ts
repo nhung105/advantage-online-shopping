@@ -1,18 +1,35 @@
 const dataTest = [
     {
-        "name": "only input required field",
-        "username": "clone123gn1dd",
+        "name": "only filled required fields with valid value",
+        "username": "cloneggaah1",
         "email": "sadadas@gmail.com",
-        "password": "N124512hhhg1212",
-        "confirmPassword": "N124512hhhg1212",
+        "password": "N124hhhg@12",
+        "confirmPassword": "N124hhhg@12",
         "agreeToTerm": true
     },
     {
-        "name": "input all fields",
-        "username": "clone123sad123",
+        "name": "fill all fields with valid value",
+        "username": "clone123sa11",
         "email": "sdsdd@gmail.com",
-        "password": "N124512hhhg1",
-        "confirmPassword": "N124512hhhg1",
+        "password": "N124hhhg@",
+        "confirmPassword": "N124hhhg@",
+        "agreeToTerm": true
+    },
+    {
+        "name": "register with existing username",
+        "username": "clone123sa",
+        "email": "sdsdd@gmail.com",
+        "password": "N124hhhg@",
+        "confirmPassword": "N124hhhg@",
+        "agreeToTerm": true
+    },
+
+    {
+        "name": "register with existing username and add space before username",
+        "username": "clone123sa",
+        "email": "sdsdd@gmail.com",
+        "password": "N124hhhg@",
+        "confirmPassword": "N124hhhg@",
         "agreeToTerm": true
     }
 ]
