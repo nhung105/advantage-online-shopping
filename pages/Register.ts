@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { faker } from '@faker-js/faker';
+import { RegisterFormData } from '../test-data/register-form-data';
 
 class RegisterPage {
     readonly page: Page;
@@ -125,16 +126,6 @@ class RegisterPage {
     async getPlaceHolder(fieldSelector) {
         return await this.page.locator(`${fieldSelector} + label`).textContent();
     }
-
-    async fillRegisterForm({ username, email, password, confirmPassword, agreeToTerm }) {
-        await this.usernameField.fill(username);
-        await this.emailField.fill(email);
-        await this.passwordField.fill(password);
-        await this.confirmPasswordField.fill(confirmPassword);
-        if (agreeToTerm) {
-            await this.agreeCheckbox.check();
-        }
-    }
     async genValue(number) {
         return new Array(number).fill('x').join('');
     }
@@ -145,22 +136,58 @@ class RegisterPage {
     async setViewportSize(width, height) {
         await this.page.setViewportSize({ width, height });
     }
-    async generateRandomUser() {
+    async fillrequiredFields({ username, email, password, confirmPassword, agreeToTerm }: RegisterFormData) {
+        await this.usernameField.fill(username);
+        await this.emailField.fill(email);
+        await this.passwordField.fill(password);
+        await this.confirmPasswordField.fill(confirmPassword);
+        if (agreeToTerm) {
+            await this.agreeCheckbox.check();
+        }
+    }
+
+    async fillAllFields({ username, email, password, confirmPassword, firstName, lastName, phoneNumber, country, city, address, state, postalCode, agreeToTerm }: RegisterFormData) {
+        await this.usernameField.fill(username);
+        await this.emailField.fill(email);
+        await this.passwordField.fill(password);
+        await this.confirmPasswordField.fill(confirmPassword);
+        if (firstName) await this.firstNameField.fill(firstName);
+        if (lastName) await this.lastNameField.fill(lastName);
+        if (phoneNumber) await this.phoneNumberField.fill(phoneNumber.toString());
+        if (country) await this.countryDropdown.selectOption({ index: 1 });
+        if (city) await this.cityField.fill(city);
+        if (address) await this.addressField.fill(address);
+        if (state) await this.stateField.fill(state);
+        if (postalCode) await this.postalCodeField.fill(postalCode);
+
+        if (agreeToTerm) {
+            await this.agreeCheckbox.check();
+        }
+    }
+    async generateData(Optional = false) {
         const password = faker.internet.password({ length: 12, pattern: /[A-Za-z0-9!@#$%^&*()?-]/ });
-        return {
+        const base: RegisterFormData = {
             username: faker.internet.username().slice(0, 15),
             email: faker.internet.email(),
-            password: password,
+            password,
             confirmPassword: password,
-            // firstName: faker.person.firstName().slice(0, 30),
-            // lastName: faker.person.lastName().slice(0, 30),
-            // phoneNumber: faker.phone.number().slice(0, 20),
-            // city: faker.location.city().slice(0, 25),
-            // address: faker.location.streetAddress().slice(0, 25),
-            // state: faker.location.state().slice(0, 10),
-            // postalCode: faker.location.zipCode().slice(0, 10)
             agreeToTerm: true
+        }
+        if (!Optional) return base;
+
+        return {
+            ...base,
+            firstName: faker.person.firstName().slice(0, 30),
+            lastName: faker.person.lastName().slice(0, 30),
+            phoneNumber: faker.phone.number().slice(0, 20),
+            city: faker.location.city().slice(0, 25),
+            address: faker.location.streetAddress().slice(0, 25),
+            state: faker.location.state().slice(0, 10),
+            postalCode: faker.location.zipCode().slice(0, 10),
         }
     }
 }
+
+
+
 export default RegisterPage;
