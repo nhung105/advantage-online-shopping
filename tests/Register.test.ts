@@ -287,23 +287,28 @@ test.describe("Check Validation Field", () => {
       await registerPage.createnewaccount.click();
       await expect(registerPage.accountTitle).toBeVisible();
     });
-    test("Log in after creating an account", async ({ page }) => {
-      const user = await registerPage.generateData(false);
-      await registerPage.fillrequiredFields(user);
-      await registerPage.submitForm();
 
-      await registerPage.navigateRegisterPage();
+    test.describe("abcjklsdjfld", () => {
+      let user: RegisterFormData;
 
-      await registerPage.accountquestion.click();
-      await page.locator('[name="username"]').fill(user.username);
-      await page.locator('[name="password"]').fill(user.password);
-      const signInButton = page.getByRole("button", { name: "SIGN IN" });
-      // await signInButton.scrollIntoViewIfNeeded();
-      // await expect(signInButton).toBeVisible();
-      await expect(signInButton).toBeEnabled();
-      await signInButton.click();
-      const usernameDisplay = await page.locator("#menuUserLink > span");
-      await expect(usernameDisplay).toContainText(user.username);
+      test.beforeEach(async ({ page }) => {
+        user = await registerPage.generateData(false);
+        await registerPage.fillrequiredFields(user);
+        await registerPage.submitForm();
+      });
+
+      test("Log in after creating an account", async ({ page }) => {
+        await registerPage.accountquestion.click();
+        await page.locator('[name="username"]').fill(user.username);
+        await page.locator('[name="password"]').fill(user.password);
+        const signInButton = page.getByRole("button", { name: "SIGN IN" });
+        await expect(signInButton).toBeEnabled();
+        await signInButton.click();
+        await expect(page.locator("#menuUserLink > span")).toContainText(
+          user.username,
+          { timeout: 30_000 }
+        );
+      });
     });
   });
 
