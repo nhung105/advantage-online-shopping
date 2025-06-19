@@ -55,70 +55,64 @@ test.describe("Check Validation Field", () => {
     },
   ];
 
-  test.describe("Leave field blank", () => {
-    testcases1.forEach(({ field, fieldSelector, expectedError }) => {
-      test(`Leave ${field} blank`, async () => {
-        const actual = await registerPage.getBlankError(fieldSelector);
-        expect(actual).toBe(expectedError);
-      });
+  testcases1.forEach(({ field, fieldSelector, expectedError }) => {
+    test(`Leave ${field} blank`, async () => {
+      const actual = await registerPage.getBlankError(fieldSelector);
+      expect(actual).toBe(expectedError);
     });
   });
 
-  test.describe("Check field's placeholder", () => {
-    testcases1.forEach(({ field, fieldSelector, placeHolder }) => {
-      test(`Check ${field}'s placeholder`, async () => {
-        const actualPlaceHolder = await registerPage.getPlaceHolder(
-          fieldSelector
-        );
-        expect(actualPlaceHolder).toBe(placeHolder);
-      });
-    });
-    const testcases2 = [
-      {
-        field: "firstname",
-        fieldSelector: '[name="first_nameRegisterPage"]',
-        placeHolder: "First Name",
-      },
-      {
-        field: "lastname",
-        fieldSelector: '[name="last_nameRegisterPage"]',
-        placeHolder: "Last Name",
-      },
-      {
-        field: "phonenumber",
-        fieldSelector: '[name="phone_numberRegisterPage"]',
-        placeHolder: "Phone Number",
-      },
-      {
-        field: "city",
-        fieldSelector: '[name="cityRegisterPage"]',
-        placeHolder: "City",
-      },
-      {
-        field: "address",
-        fieldSelector: '[name="addressRegisterPage"]',
-        placeHolder: "Address",
-      },
-      {
-        field: "state/province/region",
-        fieldSelector: '[name="state_/_province_/_regionRegisterPage"]',
-        placeHolder: "State / Province / Region",
-      },
-      {
-        field: "postalcode",
-        fieldSelector: '[name="postal_codeRegisterPage"]',
-        placeHolder: "Postal Code",
-      },
-    ];
-
-    testcases2.forEach(({ field, fieldSelector, placeHolder }) => {
-      test(`Check ${field}'s placeholder`, async () => {
-        const actual = await registerPage.getPlaceHolder(fieldSelector);
-        await expect(actual).toBe(placeHolder);
-      });
+  testcases1.forEach(({ field, fieldSelector, placeHolder }) => {
+    test(`Check ${field}'s placeholder`, async () => {
+      const actualPlaceHolder = await registerPage.getPlaceHolder(
+        fieldSelector
+      );
+      expect(actualPlaceHolder).toBe(placeHolder);
     });
   });
-
+  const testcases2 = [
+    {
+      field: "firstname",
+      fieldSelector: '[name="first_nameRegisterPage"]',
+      placeHolder: "First Name",
+    },
+    {
+      field: "lastname",
+      fieldSelector: '[name="last_nameRegisterPage"]',
+      placeHolder: "Last Name",
+    },
+    {
+      field: "phonenumber",
+      fieldSelector: '[name="phone_numberRegisterPage"]',
+      placeHolder: "Phone Number",
+    },
+    {
+      field: "city",
+      fieldSelector: '[name="cityRegisterPage"]',
+      placeHolder: "City",
+    },
+    {
+      field: "address",
+      fieldSelector: '[name="addressRegisterPage"]',
+      placeHolder: "Address",
+    },
+    {
+      field: "state/province/region",
+      fieldSelector: '[name="state_/_province_/_regionRegisterPage"]',
+      placeHolder: "State / Province / Region",
+    },
+    {
+      field: "postalcode",
+      fieldSelector: '[name="postal_codeRegisterPage"]',
+      placeHolder: "Postal Code",
+    },
+  ];
+  testcases2.forEach(({ field, fieldSelector, placeHolder }) => {
+    test(`Check ${field}'s placeholder`, async () => {
+      const actual = await registerPage.getPlaceHolder(fieldSelector);
+      await expect(actual).toBe(placeHolder);
+    });
+  });
   test("input wrong email address format", async () => {
     const actualError = await registerPage.getWrongEmailError("annen");
     await expect(actualError).toBe(
@@ -342,57 +336,91 @@ test.describe("Check Validation Field", () => {
       });
     });
 
-    const testcases = [
-      {
-        name: "Missing Uppercase",
-        password: "aaa1",
-        expected: "One upper letter required",
-      },
-      {
-        name: "Missing Lowercase",
-        password: "AAA1",
-        expected: "One lower letter required",
-      },
-      {
-        name: "Missing Number",
-        password: "Aaaa",
-        expected: "One number required",
-      },
-      {
-        name: "Only Lowercase Present",
-        password: "aaaa",
-        expected: "One upper letter required",
-      },
-      {
-        name: "Only Uppercase Present",
-        password: "AAAA",
-        expected: "One lower letter required",
-      },
-      {
-        name: "Only Number Present",
-        password: "1234",
-        expected: "One lower letter required",
-      },
-      {
-        name: "input value exceeds length max",
-        password: "dsfsdfsdfsdfs",
-        expected: "Use maximum 12 character",
-      },
-      {
-        name: "input value under length min",
-        password: "dsf",
-        expected: "Use 4 character or longer",
-      },
-    ];
-
     test.describe("Check complex requirement of password", () => {
-      testcases.forEach(({ name, password, expected }) => {
-        test(`${name}`, async ({ page }) => {
-          await registerPage.passwordField.fill(password);
-          await registerPage.clickOut();
-          await expect(registerPage.wrongPasswordError).toContainText(expected);
-        });
+      test("Missing Uppercase", async ({ page }) => {
+        const password = "abc1!";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One upper letter required"
+        );
       });
+
+      test("Missing Lowercase", async ({ page }) => {
+        const password = "ABC1!";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One lower letter required"
+        );
+      });
+      test("Missing Number", async ({ page }) => {
+        const password = "aABC!";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One number required"
+        );
+      });
+      test("Only Lowercase Present", async ({ page }) => {
+        const password = "aaaaa";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One upper letter required"
+        );
+      });
+      test("Only Uppercase Present", async ({ page }) => {
+        const password = "AAAA";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One lower letter required"
+        );
+      });
+      test("Only Number Present", async ({ page }) => {
+        const password = "1234";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "One lower letter required"
+        );
+      });
+      test("input value exceeds length max", async ({ page }) => {
+        const password = "sadfsadsadasdas";
+        await registerPage.passwordField.fill(password);
+        await registerPage.clickOut();
+        await expect(registerPage.wrongPasswordError).toContainText(
+          "Use maximum 12 character"
+        );
+      });
+
+      const testcases = [
+        { name: "Missing Uppercase", password: "", expected: "" },
+        { name: "Missing Lowercase", password: "", expected: "" },
+        { name: "Missing Number", password: "", expected: "" },
+        { name: "Only Lowercase Present", password: "", expected: "" },
+        {
+          name: "Only Uppercase Present",
+          password: "AAAA",
+          expected: "One lower letter required",
+        },
+        {
+          name: "Only Number Present",
+          password: "AAAA",
+          expected: "One lower letter required",
+        },
+        {
+          name: "input value exceeds length max",
+          password: "dsfsdfsdfsdfs",
+          expected: "Use maximum 12 character",
+        },
+        {
+          name: "input value under length min",
+          password: "dsfsdfsdfsdfs",
+          expected: "Use 4 character or longer",
+        },
+      ];
     });
   });
 });
