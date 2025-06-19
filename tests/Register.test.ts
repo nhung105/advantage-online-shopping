@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import RegisterPage from "../pages/Register";
+import invalidPassword from "../test-data/register-form-data";
 import { RegisterFormData } from "../test-data/register-form-data";
 import { registerHooks } from "module";
 import { execArgv } from "process";
@@ -10,7 +11,7 @@ let registerPage: RegisterPage;
 
 test.beforeEach(async ({ page }) => {
   registerPage = new RegisterPage(page);
-  await registerPage.navigate();
+  await registerPage.navigateRegisterPage();
 });
 
 test.describe("Happy cases", () => {
@@ -55,64 +56,69 @@ test.describe("Check Validation Field", () => {
     },
   ];
 
-  testcases1.forEach(({ field, fieldSelector, expectedError }) => {
-    test(`Leave ${field} blank`, async () => {
-      const actual = await registerPage.getBlankError(fieldSelector);
-      expect(actual).toBe(expectedError);
+  test.describe("Leave field blank", () => {
+    testcases1.forEach(({ field, fieldSelector, expectedError }) => {
+      test(`Leave ${field} blank`, async () => {
+        const actual = await registerPage.getBlankError(fieldSelector);
+        expect(actual).toBe(expectedError);
+      });
     });
   });
 
-  testcases1.forEach(({ field, fieldSelector, placeHolder }) => {
-    test(`Check ${field}'s placeholder`, async () => {
-      const actualPlaceHolder = await registerPage.getPlaceHolder(
-        fieldSelector
-      );
-      expect(actualPlaceHolder).toBe(placeHolder);
+  test.describe("Check field's placeholder", () => {
+    testcases1.forEach(({ field, fieldSelector, placeHolder }) => {
+      test(`Check ${field}'s placeholder`, async () => {
+        const actualPlaceHolder = await registerPage.getPlaceHolder(
+          fieldSelector
+        );
+        expect(actualPlaceHolder).toBe(placeHolder);
+      });
+    });
+    const testcases2 = [
+      {
+        field: "firstname",
+        fieldSelector: '[name="first_nameRegisterPage"]',
+        placeHolder: "First Name",
+      },
+      {
+        field: "lastname",
+        fieldSelector: '[name="last_nameRegisterPage"]',
+        placeHolder: "Last Name",
+      },
+      {
+        field: "phonenumber",
+        fieldSelector: '[name="phone_numberRegisterPage"]',
+        placeHolder: "Phone Number",
+      },
+      {
+        field: "city",
+        fieldSelector: '[name="cityRegisterPage"]',
+        placeHolder: "City",
+      },
+      {
+        field: "address",
+        fieldSelector: '[name="addressRegisterPage"]',
+        placeHolder: "Address",
+      },
+      {
+        field: "state/province/region",
+        fieldSelector: '[name="state_/_province_/_regionRegisterPage"]',
+        placeHolder: "State / Province / Region",
+      },
+      {
+        field: "postalcode",
+        fieldSelector: '[name="postal_codeRegisterPage"]',
+        placeHolder: "Postal Code",
+      },
+    ];
+
+    testcases2.forEach(({ field, fieldSelector, placeHolder }) => {
+      test(`Check placeholder of ${field}`, async () => {
+        expect(registerPage.getPlaceHolder(fieldSelector)).toBe(placeHolder);
+      });
     });
   });
-  const testcases2 = [
-    {
-      field: "firstname",
-      fieldSelector: '[name="first_nameRegisterPage"]',
-      placeHolder: "First Name",
-    },
-    {
-      field: "lastname",
-      fieldSelector: '[name="last_nameRegisterPage"]',
-      placeHolder: "Last Name",
-    },
-    {
-      field: "phonenumber",
-      fieldSelector: '[name="phone_numberRegisterPage"]',
-      placeHolder: "Phone Number",
-    },
-    {
-      field: "city",
-      fieldSelector: '[name="cityRegisterPage"]',
-      placeHolder: "City",
-    },
-    {
-      field: "address",
-      fieldSelector: '[name="addressRegisterPage"]',
-      placeHolder: "Address",
-    },
-    {
-      field: "state/province/region",
-      fieldSelector: '[name="state_/_province_/_regionRegisterPage"]',
-      placeHolder: "State / Province / Region",
-    },
-    {
-      field: "postalcode",
-      fieldSelector: '[name="postal_codeRegisterPage"]',
-      placeHolder: "Postal Code",
-    },
-  ];
-  testcases2.forEach(({ field, fieldSelector, placeHolder }) => {
-    test(`Check ${field}'s placeholder`, async () => {
-      const actual = await registerPage.getPlaceHolder(fieldSelector);
-      await expect(actual).toBe(placeHolder);
-    });
-  });
+
   test("input wrong email address format", async () => {
     const actualError = await registerPage.getWrongEmailError("annen");
     await expect(actualError).toBe(
@@ -136,7 +142,7 @@ test.describe("Check Validation Field", () => {
       await registerPage.submitForm();
     });
     test("register with existing username", async ({ page }) => {
-      await registerPage.navigate();
+      await registerPage.navigateRegisterPage();
       const user = await registerPage.generateData(true);
       await registerPage.fillrequiredFields(user);
       await registerPage.submitForm();
@@ -153,6 +159,13 @@ test.describe("Check Validation Field", () => {
       await registerPage.fillrequiredFields(user);
       await registerPage.submitForm();
       await expect(registerPage.existingUserError).toBeVisible();
+    });
+    test("No tick AgreetoTerm", async ({ page }) => {
+      const user = await registerPage.generateData(false);
+      user.agreeToTerm = false;
+      // console.log(user)
+      await registerPage.fillrequiredFields(user);
+      await expect(registerPage.registerButton).toBeDisabled();
     });
   });
   test.describe("Check UI", () => {
@@ -274,6 +287,24 @@ test.describe("Check Validation Field", () => {
       await registerPage.createnewaccount.click();
       await expect(registerPage.accountTitle).toBeVisible();
     });
+    test("Log in after creating an account", async ({ page }) => {
+      const user = await registerPage.generateData(false);
+      await registerPage.fillrequiredFields(user);
+      await registerPage.submitForm();
+
+      await registerPage.navigateRegisterPage();
+
+      await registerPage.accountquestion.click();
+      await page.locator('[name="username"]').fill(user.username);
+      await page.locator('[name="password"]').fill(user.password);
+      const signInButton = page.getByRole("button", { name: "SIGN IN" });
+      // await signInButton.scrollIntoViewIfNeeded();
+      // await expect(signInButton).toBeVisible();
+      await expect(signInButton).toBeEnabled();
+      await signInButton.click();
+      const usernameDisplay = await page.locator("#menuUserLink > span");
+      await expect(usernameDisplay).toContainText(user.username);
+    });
   });
 
   test.describe("Validate footer elements", () => {
@@ -337,90 +368,13 @@ test.describe("Check Validation Field", () => {
     });
 
     test.describe("Check complex requirement of password", () => {
-      test("Missing Uppercase", async ({ page }) => {
-        const password = "abc1!";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One upper letter required"
-        );
+      invalidPassword.forEach(({ name, password, expected }) => {
+        test(`${name}`, async ({ page }) => {
+          await registerPage.passwordField.fill(password);
+          await registerPage.clickOut();
+          await expect(registerPage.wrongPasswordError).toContainText(expected);
+        });
       });
-
-      test("Missing Lowercase", async ({ page }) => {
-        const password = "ABC1!";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One lower letter required"
-        );
-      });
-      test("Missing Number", async ({ page }) => {
-        const password = "aABC!";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One number required"
-        );
-      });
-      test("Only Lowercase Present", async ({ page }) => {
-        const password = "aaaaa";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One upper letter required"
-        );
-      });
-      test("Only Uppercase Present", async ({ page }) => {
-        const password = "AAAA";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One lower letter required"
-        );
-      });
-      test("Only Number Present", async ({ page }) => {
-        const password = "1234";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "One lower letter required"
-        );
-      });
-      test("input value exceeds length max", async ({ page }) => {
-        const password = "sadfsadsadasdas";
-        await registerPage.passwordField.fill(password);
-        await registerPage.clickOut();
-        await expect(registerPage.wrongPasswordError).toContainText(
-          "Use maximum 12 character"
-        );
-      });
-
-      const testcases = [
-        { name: "Missing Uppercase", password: "", expected: "" },
-        { name: "Missing Lowercase", password: "", expected: "" },
-        { name: "Missing Number", password: "", expected: "" },
-        { name: "Only Lowercase Present", password: "", expected: "" },
-        {
-          name: "Only Uppercase Present",
-          password: "AAAA",
-          expected: "One lower letter required",
-        },
-        {
-          name: "Only Number Present",
-          password: "AAAA",
-          expected: "One lower letter required",
-        },
-        {
-          name: "input value exceeds length max",
-          password: "dsfsdfsdfsdfs",
-          expected: "Use maximum 12 character",
-        },
-        {
-          name: "input value under length min",
-          password: "dsfsdfsdfsdfs",
-          expected: "Use 4 character or longer",
-        },
-      ];
     });
   });
 });
