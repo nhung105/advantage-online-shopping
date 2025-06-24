@@ -13,9 +13,12 @@ class HomePage extends Base {
     readonly inForIcon: Locator;
     readonly speakersCategory: Locator;
     readonly tabletsCategory: Locator;
-    readonly headPhones: Locator;
+    readonly headPhonesCategory: Locator;
     readonly laptopsCategory: Locator;
     readonly miceCategory: Locator;
+    readonly searchField: Locator;
+    readonly closeSearchBtn: Locator;
+
 
     constructor(page: Page) {
         super(page);
@@ -30,7 +33,13 @@ class HomePage extends Base {
         this.shoppingCartIcon = page.locator("#shoppingCartLink");
         this.inForIcon = page.locator("#menuHelp");
         this.speakersCategory = page.locator('#speakersImg');
-        
+        this.tabletsCategory = page.locator('#tabletsTxt');
+        this.headPhonesCategory = page.locator("#headphonesTxt");
+        this.laptopsCategory = page.locator("#laptopsTxt")
+        this.miceCategory = page.locator("#miceTxt")
+        this.searchField = page.locator('#autoComplete')
+        this.closeSearchBtn = page.locator('div[data-ng-click="closeSearchForce()"] img[src*="closeDark.png"]');
+
     }
 }
 export default HomePage;
