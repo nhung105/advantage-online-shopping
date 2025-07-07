@@ -11,6 +11,7 @@ import { Tablets } from "../test-data/products";
 import { Speakers } from "../test-data/products";
 import { Mice } from "../test-data/products";
 import { categories } from "../test-data/categories";
+import { ECDH } from "crypto";
 let homePage: HomePage;
 
 test.beforeEach(async ({ page }) => {
@@ -285,8 +286,174 @@ test.describe('Shopping Cart', () => {
         await expect(page.getByText('Your shopping cart is empty')).toBeVisible()
     })
     test('Hover shopping cart when no item is added', async ({ page }) => {
-        // await homePage.shoppingCartIcon.hover();
-        const [popup] = await Promise.all([await page.waitForEvent('popup'), await homePage.shoppingCartIcon.hover()])
-        await expect(page.getByText('Your shopping cart is empty')).toBeVisible()
+        await homePage.shoppingCartIcon.hover();
+        const actualToolTip = await page.locator('#toolTipCart label').allTextContents()
+        const expectedToolTip = [
+            ' ITEMS\n            (0)\n        ',
+            'Your shopping cart is empty',
+            '(0 Item)'
+        ]
+        expect(actualToolTip).toEqual(expectedToolTip)
     })
+    test('Back to homepage screen when click Continue shopping', async ({ page }) => {
+        await homePage.shoppingCartIcon.click();
+        await page.getByRole('link', { name: "CONTINUE SHOPPING" }).click();
+        await expect(page.getByText('OUR PRODUCTS')).toBeVisible()
+    })
+    test('Click HOME letter next to SHOPPING CART', async ({ page }) => {
+        await homePage.shoppingCartIcon.click();
+        await page.getByText('HOME').click()
+        await expect(page.getByText('OUR PRODUCTS')).toBeVisible()
+    })
+    test('Click logo Advantage DEMO on shopping cart screen ', async ({ page }) => {
+        await homePage.shoppingCartIcon.click();
+        await homePage.logo.click();
+        await expect(homePage.speakersCategory).toBeVisible()
+    })
+
+    test('Add 1 item to cart successfullly', async ({ page }) => {
+        await test.step('Check number display in cart icon after add 1 tem', async () => {
+            await homePage.speakersCategory.click();
+            await page.getByText('HP Roar Wireless Speaker').click();
+            await page.getByText('ADD TO CART').click()
+            const numberAddedIcon = await page.locator('#menuCart + span').textContent();
+            expect(numberAddedIcon).toBe("1");
+        })
+        await test.step('Check shopping cart screen', async () => {
+            await homePage.shoppingCartIcon.click()
+            await expect(page.locator('#shoppingCart').getByText('HP ROAR WIRELESS SPEAKER')).toBeVisible()
+            await expect(page.locator('#shoppingCart').getByTitle('WHITE')).toBeVisible()
+            await expect(page.locator('#shoppingCart').getByText('1')).toBeVisible();
+            await expect(page.locator('#shoppingCart td.smollCell').getByText('$84.99')).toBeVisible()
+            await expect(page.locator('#shoppingCart span').getByText('$84.99')).toBeVisible()
+            await expect(page.locator('#checkOutButton')).toContainText('CHECKOUT ($84.99)');
+        })
+    })
+    test('Check shopping cart popup when hover the shopping cart icon', async ({ page }) => {
+        await test.step('Check number display in cart icon after add 1 tem', async () => {
+            await homePage.speakersCategory.click();
+            await page.getByText('HP Roar Wireless Speaker').click();
+            await page.getByText('ADD TO CART').click()
+        })
+        await test.step('Check shopping cart popup', async () => {
+            await homePage.shoppingCartIcon.hover()
+            await expect(page.locator('#toolTipCart').getByText('HP ROAR WIRELESS SPEAKER')).toBeVisible()
+            await expect(page.locator('#toolTipCart').getByText('WHITE')).toBeVisible()
+            await expect(page.locator('#toolTipCart').getByText('QTY: 1')).toBeVisible();
+            await expect(page.locator('#toolTipCart td> .price').getByText('$84.99')).toBeVisible()
+            await expect(page.locator('#toolTipCart span.cart-total').getByText('$84.99')).toBeVisible()
+            await expect(homePage.checkOutPopup).toContainText('CHECKOUT ($84.99)');
+        })
+    })
+    test('Check shopping cart screen after click X to remove the item', async ({ page }) => {
+        await test.step('Check number display in cart icon after add 1 tem', async () => {
+            await homePage.speakersCategory.click();
+            await page.getByText('HP Roar Wireless Speaker').click();
+            await page.getByText('ADD TO CART').click()
+        })
+        await test.step('remove the added item', async () => {
+            await homePage.removeItemButton.click()
+            await homePage.shoppingCartIcon.hover();
+            const actualToolTip = await homePage.getEmptyPopupMessage()
+            const expectedToolTip = [
+                ' ITEMS\n            (0)\n        ',
+                'Your shopping cart is empty',
+                '(0 Item)'
+            ]
+            expect(actualToolTip).toEqual(expectedToolTip)
+        })
+    })
+    test.describe('Add multiple items with same product', () => {
+        test('Add 2 items with same product to cart successfullly', async ({ page }) => {
+            await test.step('Check number display in cart icon after add 1 tem', async () => {
+                await homePage.speakersCategory.click();
+                await page.getByText('HP Roar Wireless Speaker').click();
+                await page.getByText('ADD TO CART').click()
+                await page.getByText('ADD TO CART').click()
+                const numberAddedIcon = await page.locator('#menuCart + span').textContent();
+                expect(numberAddedIcon).toBe("2");
+            })
+            await test.step('Check shopping cart screen', async () => {
+                await homePage.shoppingCartIcon.click()
+                await expect(page.locator('#shoppingCart').getByText('HP ROAR WIRELESS SPEAKER')).toBeVisible()
+                await expect(page.locator('#shoppingCart').getByTitle('WHITE')).toBeVisible()
+                await expect(page.locator('#shoppingCart').getByText('2')).toBeVisible();
+                await expect(page.locator('#shoppingCart td.smollCell').getByText('$169.98')).toBeVisible()
+                await expect(page.locator('#shoppingCart span').getByText('$169.98')).toBeVisible()
+                await expect(page.locator('#checkOutButton')).toContainText('CHECKOUT ($169.98)');
+            })
+        })
+        test('Check shopping cart popup when hover the shopping cart icon', async ({ page }) => {
+            await test.step('Check number display in cart icon after add 2 items', async () => {
+                await homePage.speakersCategory.click();
+                await page.getByText('HP Roar Wireless Speaker').click();
+                await page.getByText('ADD TO CART').click()
+                await page.getByText('ADD TO CART').click()
+            })
+            await test.step('Check shopping cart popup', async () => {
+                await homePage.shoppingCartIcon.hover()
+                await expect(page.locator('#toolTipCart').getByText('HP ROAR WIRELESS SPEAKER')).toBeVisible()
+                await expect(page.locator('#toolTipCart').getByText('WHITE')).toBeVisible()
+                await expect(page.locator('#toolTipCart').getByText('QTY: 2')).toBeVisible();
+                await expect(page.locator('#toolTipCart td> .price').getByText('$169.98')).toBeVisible()
+                await expect(page.locator('#toolTipCart span.cart-total').getByText('$169.98')).toBeVisible()
+                await expect(homePage.checkOutPopup).toContainText('CHECKOUT ($169.98)');
+            })
+        })
+        test('Check shopping cart screen after click X to remove the item', async ({ page }) => {
+            await test.step('Check number display in cart icon after add 2 items', async () => {
+                await homePage.speakersCategory.click();
+                await page.getByText('HP Roar Wireless Speaker').click();
+                await page.getByText('ADD TO CART').click()
+                await page.getByText('ADD TO CART').click()
+
+            })
+            await test.step('remove the added item', async () => {
+                await homePage.removeItemButton.click()
+                await homePage.shoppingCartIcon.hover();
+                const actualToolTip = await homePage.getEmptyPopupMessage();
+
+                const expectedToolTip = [
+                    ' ITEMS\n            (0)\n        ',
+                    'Your shopping cart is empty',
+                    '(0 Item)'
+                ]
+                expect(actualToolTip).toEqual(expectedToolTip)
+            })
+        })
+    })
+    test.describe('Add multiple items with different categories', () => {
+        test('Add 2 items with different categories to cart successfullly', async ({ page }) => {
+            await test.step('Check number display in cart icon after add 2 items of different category', async () => {
+                await homePage.speakersCategory.click();
+                await page.getByText('HP Roar Wireless Speaker').click();
+                await page.getByText('ADD TO CART').click()
+
+                await homePage.logo.click()
+                await homePage.laptopsCategory.click();
+                await page.getByText('HP Pavilion 15z Laptop').click();
+                await page.getByText('ADD TO CART').click()
+
+                const numberAddedIcon = await page.locator('#menuCart + span').textContent();
+                expect(numberAddedIcon).toBe("2");
+            })
+            await test.step('Check shopping cart popup', async () => {
+                await homePage.shoppingCartIcon.hover()
+                await expect(page.locator('#toolTipCart').getByText('HP ROAR WIRELESS SPEAKER')).toBeVisible()
+                await expect(page.locator('#toolTipCart').getByText('HP Pavilion 15z Laptop')).toBeVisible()
+                await expect(page.locator('#toolTipCart').getByText('BLUE')).toBeVisible()
+
+                await expect(page.locator('#toolTipCart label.ng-binding', { hasText: "HP PAVILION 15Z LAPTOP" }))
+
+                // must get properties of each product
+
+                await expect(page.locator('#toolTipCart').getByText('QTY: 1')).toBeVisible();
+                await expect(page.locator('#toolTipCart td> .price').getByText('$634.98')).toBeVisible()
+                await expect(page.locator('#toolTipCart span.cart-total').getByText('$634.98')).toBeVisible()
+                await expect(homePage.checkOutPopup).toContainText('CHECKOUT ($634.98)');
+            })
+        })
+    })
+
+
 })
