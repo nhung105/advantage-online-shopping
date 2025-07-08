@@ -1,5 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import Base from "./Base";
+import { LoadFnOutput } from "module";
 
 class HomePage extends Base {
     readonly logo: Locator;
@@ -9,7 +10,6 @@ class HomePage extends Base {
     readonly contactUsMenu: Locator;
     readonly searchItem: Locator;
     readonly userIcon: Locator;
-    readonly shoppingCartIcon: Locator;
     readonly inForIcon: Locator;
     readonly speakersCategory: Locator;
     readonly tabletsCategory: Locator;
@@ -18,6 +18,12 @@ class HomePage extends Base {
     readonly miceCategory: Locator;
     readonly searchField: Locator;
     readonly closeSearchBtn: Locator;
+    readonly shoppingCartIcon: Locator;
+    readonly removeItemButton: Locator;
+    readonly checkOutPopup: Locator;
+    readonly shoppingCartInfor: Locator;
+    readonly toolTipCart: Locator;
+
 
 
     constructor(page: Page) {
@@ -39,7 +45,27 @@ class HomePage extends Base {
         this.miceCategory = page.locator("#miceTxt")
         this.searchField = page.locator('#autoComplete')
         this.closeSearchBtn = page.locator('div[data-ng-click="closeSearchForce()"] img[src*="closeDark.png"]');
+        this.shoppingCartIcon = page.locator('#shoppingCartLink');
+        this.shoppingCartInfor = page.locator('#shoppingCart');
+        this.toolTipCart = page.locator('#toolTipCart')
 
+
+        // tooltip
+        this.removeItemButton = page.locator('#toolTipCart div.removeProduct');
+        this.checkOutPopup = page.locator('#checkOutPopUp');
+
+    }
+    async getEmptyPopupMessage() {
+        return await this.page.locator('#toolTipCart label').allTextContents()
+    }
+    async getNumber() {
+        return await this.page.locator('#menuCart + span').textContent();
+    }
+    async selectItem(item: string) {
+        await this.page.getByText(item).click()
+    }
+    async addToCart() {
+        await this.page.locator('[name="save_to_cart"]').click()
     }
 }
 export default HomePage;
